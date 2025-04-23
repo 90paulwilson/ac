@@ -1,0 +1,940 @@
+/**
+ * Enhanced Compressor Identification Wizard
+ * Usage: [compressor_wizard]
+ */
+
+function compressor_identification_wizard_shortcode() {
+    ob_start();
+    
+    // Define makes with their logo paths
+    $compressor_makes = array(
+        'Atlas Copco' => 'Atlas Copco',
+        'ABAC' => 'ABAC',
+        'Ingersoll Rand' => 'Ingersoll Rand',
+        'CompAir' => 'CompAir',
+        'FIAC' => 'Fiac',
+        'BOGE' => 'BOGE',
+        'HPC-Kaeser' => 'HPC/Kaeser',
+        'Sullair' => 'Sullair',
+        'Other' => 'Other'
+    );
+    
+    // Define all possible controllers
+    $all_controllers = array(
+        '-' => 'No Controller',
+        'infologic' => 'Infologic',
+        'MC2' => 'MC2',
+        'smart' => 'Smart Controller',
+        'other' => 'Other Controller'
+    );
+    
+    // Define make-specific controllers
+    $make_controllers = array(
+        'ABAC' => array('-', 'infologic', 'MC2'),
+        'Atlas Copco' => array('-', 'smart'),
+        'Ingersoll Rand' => array('-', 'smart'),
+        'CompAir' => array('-', 'mc'),
+        'FIAC' => array('-'),
+        'BOGE' => array('-', 'smart'),
+        'HPC-Kaeser' => array('-', 'smart'),
+        'Sullair' => array('-', 'smart'),
+        'other' => array('-', 'other')
+    );
+    ?>
+    
+    <div class="compressor-wizard-wrapper">
+        <button id="wizard-toggle-button" class="wizard-toggle-button">
+         <span class="icon">🔍︎</span> Help me identify my compressor
+        </button>
+        
+        <div class="compressor-wizard-container" style="display: none;">
+            <div class="wizard-progress">
+                <div class="progress-bar-container">
+                    <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                </div>
+                <div class="steps-container">
+                    <div class="step active" data-step="1">
+                        <div class="step-circle">1</div>
+                        <div class="step-label">Make</div>
+                    </div>
+                    <div class="step" data-step="2">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">Model</div>
+                    </div>
+                    <div class="step" data-step="3">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">KW</div>
+                    </div>
+                    <div class="step" data-step="4">
+                        <div class="step-circle">4</div>
+                        <div class="step-label">Year</div>
+                    </div>
+                    <div class="step" data-step="5">
+                        <div class="step-circle">5</div>
+                        <div class="step-label">Serial</div>
+                    </div>
+                    <div class="step" data-step="6">
+                        <div class="step-circle">6</div>
+                        <div class="step-label">Pressure</div>
+                    </div>
+                    <div class="step" data-step="7">
+                        <div class="step-circle">7</div>
+                        <div class="step-label">Controller</div>
+                    </div>
+                </div>
+            </div>
+            
+            <form id="compressor-wizard-form" class="wizard-form">
+                <!-- Step 1: Make Selection -->
+                <div class="wizard-step active" data-step="1">
+                    <h3>Step 1: What make is your compressor?</h3>
+                    <p>Select the manufacturer of your compressor from the list below.</p>
+                    
+                    <div class="make-selection">
+                        <?php foreach ($compressor_makes as $slug => $name): ?>
+                            <div class="make-option" data-make="<?php echo esc_attr($slug); ?>">
+                                <div class="make-logo-container">
+                                    <img src="https://airmatic-compressors.co.uk/compressor-wizard/make-logos/<?php echo esc_attr($slug); ?>.png" alt="<?php echo esc_attr($name); ?> logo">
+                                </div>
+                                <span class="make-name"><?php echo esc_html($name); ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    
+                    <input type="hidden" name="compressor_make" id="compressor_make" value="">
+                    
+                    <div class="wizard-navigation">
+                        <button type="button" class="next-step" disabled>Next</button>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Model Selection -->
+                <div class="wizard-step" data-step="2" style="display: none;">
+                    <h3>Step 2: What model is your compressor?</h3>
+                    <p>Find the model info on your <span id="model-make-name">compressor's</span> identification plate:</p>
+                    
+                    <div class="help-images-container" id="model-help-images">
+                        <div class="default-help">
+                            <p>Please select your compressor make first to see specific examples.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="compressor_model">Model:</label>
+                        <input type="text" id="compressor_model" name="compressor_model" placeholder="Enter model" required>
+                    </div>
+                    
+                    <div class="wizard-navigation">
+                        <button type="button" class="prev-step">Back</button>
+                        <button type="button" class="next-step">Next</button>
+                    </div>
+                </div>
+                
+                <!-- Step 3: KW Rating -->
+                <div class="wizard-step" data-step="3" style="display: none;">
+                    <h3>Step 3: What KW is your compressor?</h3>
+                    <p>Find the power rating (in KW) on your <span id="kw-make-name">compressor's</span> identification plate:</p>
+                    
+                    <div class="help-images-container" id="kw-help-images">
+                        <div class="default-help">
+                            <p>Please select your compressor make first to see specific examples.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="compressor_kw">KW Rating:</label>
+                        <input type="number" id="compressor_kw" name="compressor_kw" placeholder="Enter KW rating" min="1" step="0.1" required>
+                    </div>
+                    
+                    <div class="wizard-navigation">
+                        <button type="button" class="prev-step">Back</button>
+                        <button type="button" class="next-step">Next</button>
+                    </div>
+                </div>
+                
+                <!-- Step 4: Year -->
+                <div class="wizard-step" data-step="4" style="display: none;">
+                    <h3>Step 4: What year is your compressor?</h3>
+                    <p>Find the manufacturing year on your <span id="year-make-name">compressor's</span> identification plate:</p>
+                    
+                    <div class="help-images-container" id="year-help-images">
+                        <div class="default-help">
+                            <p>Please select your compressor make first to see specific examples.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="compressor_year">Manufacturing Year:</label>
+                        <input type="number" id="compressor_year" name="compressor_year" placeholder="Enter year (e.g. 2015)" min="1900" max="<?php echo date('Y'); ?>" required>
+                    </div>
+                    
+                    <div class="wizard-navigation">
+                        <button type="button" class="prev-step">Back</button>
+                        <button type="button" class="next-step">Next</button>
+                    </div>
+                </div>
+                
+                <!-- Step 5: Serial Number -->
+                <div class="wizard-step" data-step="5" style="display: none;">
+                    <h3>Step 5: What is your serial number?</h3>
+                    <p>Find the serial number on your <span id="serial-make-name">compressor's</span> identification plate:</p>
+                    
+                    <div class="help-images-container" id="serial-help-images">
+                        <div class="default-help">
+                            <p>Please select your compressor make first to see specific examples.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="compressor_serial">Serial Number:</label>
+                        <input type="text" id="compressor_serial" name="compressor_serial" placeholder="Enter serial number" required>
+                    </div>
+                    
+                    <div class="wizard-navigation">
+                        <button type="button" class="prev-step">Back</button>
+                        <button type="button" class="next-step">Next</button>
+                    </div>
+                </div>
+                
+                <!-- Step 6: Pressure/Bar -->
+                <div class="wizard-step" data-step="6" style="display: none;">
+                    <h3>Step 6: What pressure/Bar is your compressor?</h3>
+                    <p>Find the pressure rating on your <span id="pressure-make-name">compressor's</span> identification plate:</p>
+                    
+                    <div class="help-images-container" id="pressure-help-images">
+                        <div class="default-help">
+                            <p>Please select your compressor make first to see specific examples.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="compressor_pressure">Pressure (Bar):</label>
+                        <input type="number" id="compressor_pressure" name="compressor_pressure" placeholder="Enter pressure in Bar" min="1" step="0.1" required>
+                    </div>
+                    
+                    <div class="wizard-navigation">
+                        <button type="button" class="prev-step">Back</button>
+                        <button type="button" class="next-step">Next</button>
+                    </div>
+                </div>
+                
+                <!-- Step 7: Controller -->
+                <div class="wizard-step" data-step="7" style="display: none;">
+                    <h3>Step 7: What controller does your compressor have?</h3>
+                    <p>Select the controller type from the options below:</p>
+                    
+                    <div class="controller-selection" id="controller-options">
+                        <div class="default-help">
+                            <p>Please complete previous steps to see available controllers.</p>
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" name="compressor_controller" id="compressor_controller" value="">
+                    
+                    <div class="wizard-navigation">
+                        <button type="button" class="prev-step">Back</button>
+                        <button type="button" class="submit-wizard">Identify My Compressor</button>
+                    </div>
+                </div>
+                
+            <!-- Results Section -->
+            <div class="wizard-results" style="display: none;">
+                <h3>Your Compressor Identification</h3>
+                <div class="results-container">
+                    <div class="compressor-variant-example">
+                        <h4>Variant:</h4>
+                        <p id="compressor-variant" class="variant-example">
+                            <span id="result-make"></span> 
+                            <span id="result-model"></span> 
+                            <span id="result-kw"></span> 
+                            <span id="result-year"></span> 
+                            (<span id="result-serial"></span>) 
+                            <span id="result-pressure"></span> 
+                            <span id="result-controller"></span>
+                        </p>
+                    </div>
+                    
+                    <div class="actions">
+                        <form id="compressor-search-form" action="<?php echo esc_url(home_url('/')); ?>" method="get" class="aws-search-form">
+                            <input type="hidden" name="s" id="compressor-search-term" value="">
+                            <input type="hidden" name="post_type" value="product">
+                            <input type="hidden" name="type_aws" value="true">
+<!-- <button type="submit" class="button">Find Parts for This Compressor</button> -->
+                        </form>
+                        <button type="button" class="restart-wizard">Start Over</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    /* Toggle Button Styles */
+    .compressor-wizard-wrapper {
+        margin: 20px 0;
+    }
+    
+    .wizard-toggle-button {
+        background-color: #005aaa;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        font-weight: normal;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .wizard-toggle-button:hover {
+        background-color: #004488;
+    }
+    
+    .wizard-toggle-button .icon {
+        font-size: 18px;
+    }
+    
+    /* Wizard Container */
+    .compressor-wizard-container {
+        max-width: 800px;
+        margin: 20px auto 0;
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-top: 4px solid #005aaa;
+    }
+    
+    /* Progress Bar */
+    .wizard-progress {
+        margin-bottom: 30px;
+        position: relative;
+    }
+    
+    .progress-bar-container {
+        position: relative;
+        height: 4px;
+        background: #eee;
+        margin: 0 12px;
+    }
+    
+    .progress-bar {
+        position: absolute;
+        height: 100%;
+        background: #005aaa;
+        top: 0;
+        left: 0;
+        transition: width 0.3s ease;
+        z-index: 1;
+    }
+    
+    .steps-container {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        z-index: 2;
+        margin-top: -14px;
+    }
+    
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+    }
+    
+    .step-circle {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #ddd;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-bottom: 5px;
+        border: 2px solid #fff;
+    }
+    
+    .step.active .step-circle,
+    .step.completed .step-circle {
+        background: #005aaa;
+    }
+    
+    .step.active .step-label {
+        color: #005aaa;
+        font-weight: bold;
+    }
+    
+    .step.completed .step-label {
+        color: #666;
+    }
+    
+    .step-label {
+        font-size: 14px;
+        color: #999;
+    }
+    
+    /* Make Selection Grid */
+    .make-selection {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin: 20px 0;
+    }
+    
+    .make-option {
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        padding: 15px 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .make-option:hover {
+        border-color: #005aaa;
+    }
+    
+    .make-option.selected {
+        border-color: #005aaa;
+        background: #f0f8ff;
+    }
+    
+    .make-logo-container {
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+    
+    .make-option img {
+        max-height: 100%;
+        max-width: 100%;
+        width: auto;
+        object-fit: contain;
+    }
+    
+    .make-name {
+        font-weight: 500;
+    }
+    
+    /* Help Images */
+    .help-images-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin: 20px 0;
+        justify-content: center;
+    }
+    
+    .help-image-group {
+        flex: 1;
+        min-width: 250px;
+        max-width: 100%;
+    }
+    
+    .help-image-group img {
+        width: 100%;
+        height: auto;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        margin-bottom: 5px;
+    }
+    
+    .help-image-caption {
+        text-align: center;
+        font-size: 0.9em;
+        color: #666;
+    }
+    
+    .default-help {
+        text-align: center;
+        padding: 20px;
+        background: #f5f5f5;
+        border-radius: 5px;
+        width: 100%;
+    }
+    
+    /* Controller Selection */
+    .controller-selection {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin: 20px 0;
+    }
+    
+    .controller-option {
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        padding: 15px 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .controller-option:hover {
+        border-color: #005aaa;
+    }
+    
+    .controller-option.selected {
+        border-color: #005aaa;
+        background: #f0f8ff;
+    }
+    
+    .controller-option img {
+        max-height: 60px;
+        max-width: 100%;
+        width: auto;
+        object-fit: contain;
+        margin-bottom: 10px;
+    }
+    
+    /* Form Elements */
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    /* Navigation */
+    .wizard-navigation {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 30px;
+    }
+    
+    .wizard-navigation button {
+        padding: 10px 20px;
+        background: #005aaa;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .wizard-navigation button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+    
+    .wizard-navigation button.prev-step {
+        background: #666;
+    }
+    
+    /* Results Section */
+    .wizard-results {
+        background: #f9f9f9;
+        padding: 20px;
+        border-radius: 5px;
+        margin-top: 20px;
+    }
+    
+    .compressor-variant-example {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        border-left: 4px solid #005aaa;
+    }
+    
+    .compressor-variant-example h4 {
+        margin-top: 0;
+        color: #005aaa;
+    }
+    
+    .variant-example {
+        font-size: 18px;
+        font-weight: 500;
+        line-height: 1.4;
+    }
+    
+    .actions {
+        margin-top: 30px;
+        display: flex;
+        gap: 10px;
+    }
+    
+    .actions a, .actions button {
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 4px;
+    }
+    
+    .actions a.button {
+        background: #005aaa;
+        color: #fff;
+    }
+    
+    .actions button.restart-wizard {
+        background: #fff;
+        border: 1px solid #005aaa;
+        color: #005aaa;
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .make-selection, .controller-selection {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .step-label {
+            font-size: 12px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .make-selection, .controller-selection {
+            grid-template-columns: 1fr;
+        }
+        
+        .wizard-navigation {
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .wizard-navigation button {
+            width: 100%;
+        }
+    }
+    .aws-search-form {
+        display: inline;
+        margin: 0;
+        padding: 0;
+    }
+    </style>
+
+    <script>
+    jQuery(document).ready(function($) {
+        // Define make-specific data
+        var makeData = {
+            'ABAC': {
+                controllers: ['-', 'infologic', 'MC2'],
+                help: {
+                    model: [
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/abac-model1.jpg', caption: 'Possible Location 1'},
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/abac-model2.jpg', caption: 'Possible Location 2'}
+                    ],
+                    kw: [
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/abac-kw1.jpg', caption: 'KW rating on motor plate'},
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/abac-kw2.jpg', caption: 'Power rating on specification label'}
+                    ],
+                    year: [
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/abac-year1.jpg', caption: 'Manufacturing date code'},
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/abac-year2.jpg', caption: 'Year in serial number'}
+                    ],
+                    serial: [
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/abac-serial1.jpg', caption: 'Serial number on metal plate'},
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/abac-serial2.jpg', caption: 'Serial sticker on unit'}
+                    ],
+                    pressure: [
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/abac-pressure1.jpg', caption: 'Pressure rating on data plate'},
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/abac-pressure2.jpg', caption: 'Pressure setting on gauge'}
+                    ]
+                }
+            },
+            'Atlas Copco': {
+                controllers: ['-', 'smart'],
+                help: {
+                    model: [
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/atlas-copco-model1.jpg', caption: 'Model plate location (front panel)'},
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/atlas-copco-model2.jpg', caption: 'Alternative model location (side panel)'}
+                    ],
+                    kw: [
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/atlas-copco-kw1.jpg', caption: 'KW rating on specification plate'},
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/atlas-copco-kw2.jpg', caption: 'Motor rating plate'}
+                    ],
+                    year: [
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/atlas-copco-year1.jpg', caption: 'Manufacturing date on serial plate'},
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/atlas-copco-year2.jpg', caption: 'Date code on motor'}
+                    ],
+                    serial: [
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/atlas-copco-serial1.jpg', caption: 'Serial number location'},
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/atlas-copco-serial2.jpg', caption: 'Alternative serial number location'}
+                    ],
+                    pressure: [
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/atlas-copco-pressure1.jpg', caption: 'Pressure rating on specification plate'},
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/atlas-copco-pressure2.jpg', caption: 'Pressure switch setting'}
+                    ]
+                }
+            },
+            // Add similar entries for all makes
+            'other': {
+                controllers: ['-', 'other'],
+                help: {
+                    model: [
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/generic-model1.jpg', caption: 'Typical model plate location'},
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/generic-model2.jpg', caption: 'Alternative model number location'}
+                    ],
+                    kw: [
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/generic-kw1.jpg', caption: 'Typical KW rating location'},
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/generic-kw2.jpg', caption: 'Motor rating plate'}
+                    ],
+                    year: [
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/generic-year1.jpg', caption: 'Manufacturing date location'},
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/generic-year2.jpg', caption: 'Year code in serial number'}
+                    ],
+                    serial: [
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/generic-serial1.jpg', caption: 'Serial number plate'},
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/generic-serial2.jpg', caption: 'Serial number sticker'}
+                    ],
+                    pressure: [
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/generic-pressure1.jpg', caption: 'Pressure rating on data plate'},
+                        {src: 'https://airmatic-compressors.co.uk/compressor-wizard/help-images/generic-pressure2.jpg', caption: 'Pressure gauge setting'}
+                    ]
+                }
+            }
+        };
+        
+        // Controller definitions
+        var controllerData = {
+            '-': { name: 'No Controller', img: 'https://airmatic-compressors.co.uk/compressor-wizard/controllers/-.png' },
+            'infologic': { name: 'Infologic', img: 'https://airmatic-compressors.co.uk/compressor-wizard/controllers/infologic.png' },
+            'MC2': { name: 'MC2', img: 'https://airmatic-compressors.co.uk/compressor-wizard/controllers/mc.png' },
+            'smart': { name: 'Smart Controller', img: 'https://airmatic-compressors.co.uk/compressor-wizard/controllers/smart.png' },
+            'other': { name: 'Other Controller', img: 'https://airmatic-compressors.co.uk/compressor-wizard/controllers/other.png' }
+        };
+        
+        // Toggle wizard visibility
+        $('#wizard-toggle-button').on('click', function() {
+            $('.compressor-wizard-container').slideToggle(300);
+            $(this).toggleClass('active');
+        });
+        
+        // Make selection - updates all help content and controllers
+        $('.make-option').on('click', function() {
+            var make = $(this).data('make');
+            var makeName = $(this).find('.make-name').text();
+            
+            $('.make-option').removeClass('selected');
+            $(this).addClass('selected');
+            $('#compressor_make').val(make);
+            $('.next-step').prop('disabled', false);
+            
+            // Update make name in all steps
+            $('[id$="-make-name"]').text(makeName + "'s");
+            
+            // Get make data or fallback to 'other'
+            var data = makeData[make] || makeData['other'];
+            
+            // Update help images for all steps
+            updateHelpImages('model', data.help.model);
+            updateHelpImages('kw', data.help.kw);
+            updateHelpImages('year', data.help.year);
+            updateHelpImages('serial', data.help.serial);
+            updateHelpImages('pressure', data.help.pressure);
+            
+            // Update available controllers
+            updateControllerOptions(data.controllers);
+        });
+        
+        // Function to update help images for a specific step
+        function updateHelpImages(step, images) {
+            var container = $('#' + step + '-help-images');
+            container.empty();
+            
+            if (images && images.length > 0) {
+                $.each(images, function(index, image) {
+                    container.append(
+                        '<div class="help-image-group">' +
+                            '<img src="' + image.src + '" alt="' + image.caption + '">' +
+                            '<div class="help-image-caption">' + image.caption + '</div>' +
+                        '</div>'
+                    );
+                });
+            } else {
+                container.append(
+                    '<div class="default-help">' +
+                        '<p>No specific examples available for this make.</p>' +
+                    '</div>'
+                );
+            }
+        }
+        
+        // Function to update available controllers
+        function updateControllerOptions(controllerSlugs) {
+            var container = $('#controller-options');
+            container.empty();
+            
+            if (controllerSlugs && controllerSlugs.length > 0) {
+                $.each(controllerSlugs, function(index, slug) {
+                    var controller = controllerData[slug];
+                    if (controller) {
+                        container.append(
+                            '<div class="controller-option" data-controller="' + slug + '">' +
+                                '<img src="' + controller.img + '" alt="' + controller.name + '">' +
+                                '<span>' + controller.name + '</span>' +
+                            '</div>'
+                        );
+                    }
+                });
+            } else {
+                container.append(
+                    '<div class="default-help">' +
+                        '<p>No controllers available for this selection.</p>' +
+                    '</div>'
+                );
+            }
+            
+            // Rebind controller selection events
+            $('.controller-option').on('click', function() {
+                $('.controller-option').removeClass('selected');
+                $(this).addClass('selected');
+                $('#compressor_controller').val($(this).data('controller'));
+            });
+        }
+        
+        // Navigation
+        $('.next-step').on('click', function() {
+            var currentStep = $('.wizard-step.active').data('step');
+            var nextStep = currentStep + 1;
+            
+            if (validateStep(currentStep)) {
+                // Mark current step as completed
+                $('.step[data-step="' + currentStep + '"]').addClass('completed');
+                
+                $('.wizard-step.active').removeClass('active').hide();
+                $('.wizard-step[data-step="' + nextStep + '"]').addClass('active').show();
+                updateProgressBar(nextStep);
+                $('.step').removeClass('active');
+                $('.step[data-step="' + nextStep + '"]').addClass('active');
+            }
+        });
+        
+        $('.prev-step').on('click', function() {
+            var currentStep = $('.wizard-step.active').data('step');
+            var prevStep = currentStep - 1;
+            
+            $('.wizard-step.active').removeClass('active').hide();
+            $('.wizard-step[data-step="' + prevStep + '"]').addClass('active').show();
+            updateProgressBar(prevStep);
+            $('.step').removeClass('active');
+            $('.step[data-step="' + prevStep + '"]').addClass('active');
+        });
+        
+       // Submit wizard
+        $('.submit-wizard').on('click', function() {
+            if (validateStep(7)) {
+                // Mark final step as completed
+                $('.step[data-step="7"]').addClass('completed');
+                
+                // Format the exact search term with wildcards for strict matching
+                var searchTerm = '*' + [
+                    $('#compressor_make').val(),
+                    $('#compressor_model').val(),
+                    $('#compressor_kw').val(),
+                    $('#compressor_year').val(),
+                    '(' + $('#compressor_serial').val() + ')',
+                    $('#compressor_pressure').val() + 'bar',
+                    $('#compressor_controller').val()
+                ].join(' ') + '*';
+                
+                // Update results display
+                $('#result-make').text($('#compressor_make').val());
+                $('#result-model').text($('#compressor_model').val());
+                $('#result-kw').text($('#compressor_kw').val());
+                $('#result-year').text($('#compressor_year').val());
+                $('#result-serial').text($('#compressor_serial').val());
+                $('#result-pressure').text($('#compressor_pressure').val() + 'bar');
+                $('#result-controller').text($('#compressor_controller').val());
+                
+                // Set the search term in the hidden input
+                $('#compressor-search-term').val(searchTerm);
+                
+                $('.wizard-step.active').removeClass('active').hide();
+                $('.wizard-results').show();
+                updateProgressBar(8);
+            }
+        });
+      
+        // Restart wizard
+        $('.restart-wizard').on('click', function() {
+            $('#compressor-wizard-form')[0].reset();
+            $('.make-option, .controller-option').removeClass('selected');
+            $('.wizard-step').removeClass('active').hide();
+            $('.wizard-step[data-step="1"]').addClass('active').show();
+            $('.wizard-results').hide();
+            $('.step').removeClass('active completed');
+            $('.step[data-step="1"]').addClass('active');
+            updateProgressBar(1);
+            $('.next-step').prop('disabled', true);
+        });
+        
+        // Update progress bar
+        function updateProgressBar(step) {
+            var percentage = ((step - 1) / 7) * 100;
+            $('.progress-bar').css('width', percentage + '%');
+        }
+        
+        // Validate step
+        function validateStep(step) {
+            var isValid = true;
+            
+            if (step === 1) {
+                if ($('#compressor_make').val() === '') {
+                    alert('Please select your compressor make');
+                    isValid = false;
+                }
+            } else if (step === 2) {
+                if ($('#compressor_model').val() === '') {
+                    alert('Please enter your compressor model');
+                    isValid = false;
+                }
+            } else if (step === 3) {
+                if ($('#compressor_kw').val() === '' || $('#compressor_kw').val() <= 0) {
+                    alert('Please enter a valid KW rating');
+                    isValid = false;
+                }
+            } else if (step === 4) {
+                if ($('#compressor_year').val() === '' || $('#compressor_year').val() < 1900 || $('#compressor_year').val() > new Date().getFullYear()) {
+                    alert('Please enter a valid manufacturing year');
+                    isValid = false;
+                }
+            } else if (step === 5) {
+                if ($('#compressor_serial').val() === '') {
+                    alert('Please enter your serial number');
+                    isValid = false;
+                }
+            } else if (step === 6) {
+                if ($('#compressor_pressure').val() === '' || $('#compressor_pressure').val() <= 0) {
+                    alert('Please enter a valid pressure rating');
+                    isValid = false;
+                }
+            } else if (step === 7) {
+                if ($('#compressor_controller').val() === '') {
+                    alert('Please select your controller type');
+                    isValid = false;
+                }
+            }
+            
+            return isValid;
+        }
+    });
+    </script>
+    
+    <?php
+    return ob_get_clean();
+}
+add_shortcode('compressor_wizard', 'compressor_identification_wizard_shortcode');
